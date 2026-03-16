@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Admin Dashboard — Ease My Concession</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin-sm { display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+
+<!-- Navbar -->
+<nav class="h-[68px] flex items-center justify-between bg-white border-b border-slate-200 px-6 md:px-10 sticky top-0 z-50 shadow-sm flex-shrink-0">
+  <div class="font-extrabold text-xl text-[#0f2d5e] flex items-center gap-2.5" style="font-family:'Outfit',sans-serif;">
+    <div class="w-8 h-8 bg-[#0f2d5e] rounded-xl flex items-center justify-center">
+      <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+    </div>
+    Admin Portal
+  </div>
+  <div class="flex items-center gap-3">
+    <div class="hidden md:flex items-center gap-2 text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+      <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      <span id="adminName" class="font-semibold"></span>
+    </div>
+    <button onclick="refresh()" class="px-4 py-2 border-2 border-slate-200 text-slate-600 font-semibold text-sm rounded-xl hover:bg-slate-50 transition flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      Refresh
+    </button>
+    <button onclick="adminLogout()" class="px-4 py-2 border-2 border-slate-200 text-slate-500 font-semibold text-sm rounded-xl hover:bg-slate-50 transition flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Logout
+    </button>
+  </div>
+</nav>
+
+<div class="flex-1 max-w-7xl mx-auto w-full px-6 py-10">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-extrabold text-[#0f2d5e]" style="font-family:'Outfit',sans-serif;">Applications Dashboard</h1>
+    <p class="text-slate-400 text-sm mt-1.5">Review, verify and approve student concession applications.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <p class="text-4xl font-extrabold text-[#0f2d5e]" id="sT" style="font-family:'Outfit',sans-serif;">—</p>
+      <p class="text-slate-400 text-sm font-medium mt-1.5">Total</p>
+    </div>
+    <div class="bg-white rounded-2xl border-t-4 border-amber-400 border-x border-b border-slate-200 p-6 shadow-sm">
+      <p class="text-4xl font-extrabold text-amber-500" id="sP" style="font-family:'Outfit',sans-serif;">—</p>
+      <p class="text-slate-400 text-sm font-medium mt-1.5">Pending</p>
+    </div>
+    <div class="bg-white rounded-2xl border-t-4 border-purple-400 border-x border-b border-slate-200 p-6 shadow-sm">
+      <p class="text-4xl font-extrabold text-purple-600" id="sV" style="font-family:'Outfit',sans-serif;">—</p>
+      <p class="text-slate-400 text-sm font-medium mt-1.5">Verification</p>
+    </div>
+    <div class="bg-white rounded-2xl border-t-4 border-green-400 border-x border-b border-slate-200 p-6 shadow-sm">
+      <p class="text-4xl font-extrabold text-green-600" id="sA" style="font-family:'Outfit',sans-serif;">—</p>
+      <p class="text-slate-400 text-sm font-medium mt-1.5">Approved</p>
+    </div>
+    <div class="bg-white rounded-2xl border-t-4 border-red-400 border-x border-b border-slate-200 p-6 shadow-sm">
+      <p class="text-4xl font-extrabold text-red-500" id="sR" style="font-family:'Outfit',sans-serif;">—</p>
+      <p class="text-slate-400 text-sm font-medium mt-1.5">Rejected</p>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="flex gap-2 flex-wrap mb-5">
+    <button class="filter px-4 py-2 rounded-xl border text-sm font-semibold transition active bg-[#0f2d5e] text-white border-[#0f2d5e]" data-s="" onclick="filt(this)">All</button>
+    <button class="filter px-4 py-2 rounded-xl border text-sm font-semibold transition bg-white text-slate-500 border-slate-200 hover:border-[#0f2d5e] hover:text-[#0f2d5e]" data-s="Pending" onclick="filt(this)">Pending</button>
+    <button class="filter px-4 py-2 rounded-xl border text-sm font-semibold transition bg-white text-slate-500 border-slate-200 hover:border-[#0f2d5e] hover:text-[#0f2d5e]" data-s="Under Verification" onclick="filt(this)">Verification</button>
+    <button class="filter px-4 py-2 rounded-xl border text-sm font-semibold transition bg-white text-slate-500 border-slate-200 hover:border-[#0f2d5e] hover:text-[#0f2d5e]" data-s="Approved" onclick="filt(this)">Approved</button>
+    <button class="filter px-4 py-2 rounded-xl border text-sm font-semibold transition bg-white text-slate-500 border-slate-200 hover:border-[#0f2d5e] hover:text-[#0f2d5e]" data-s="Rejected" onclick="filt(this)">Rejected</button>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div id="loading" class="py-16 text-center text-slate-400">
+      <div style="display:inline-block;width:24px;height:24px;border:2.5px solid rgba(0,0,0,.1);border-top-color:#0f2d5e;border-radius:50%;animation:spin .7s linear infinite;" class="mb-4 mx-auto block"></div>
+      <p class="text-sm">Loading applications...</p>
+    </div>
+    <div id="empty" class="hidden py-16 text-center">
+      <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <p class="text-slate-500 font-semibold">No applications found</p>
+    </div>
+    <div id="tableWrap" class="hidden overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 border-b border-slate-100">
+          <tr>
+            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Student</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">College ID</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Route</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Duration</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Applied</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div id="detailModal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4 overflow-y-auto" onclick="if(event.target===this)closeModal()">
+  <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl my-auto" onclick="event.stopPropagation()">
+    <!-- Modal header -->
+    <div class="flex justify-between items-center px-7 py-5 border-b border-slate-100">
+      <h3 class="font-extrabold text-lg text-[#0f2d5e]" id="modalTitle" style="font-family:'Outfit',sans-serif;">Application Details</h3>
+      <button onclick="closeModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition">
+        <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="modalBody" class="px-7 py-6"></div>
+  </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="fixed inset-0 bg-black/60 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl p-7 max-w-md w-full shadow-2xl">
+    <h3 class="font-extrabold text-lg text-[#0f2d5e] mb-1" style="font-family:'Outfit',sans-serif;">Reject Application</h3>
+    <p class="text-sm text-slate-400 mb-5">Provide a clear reason. This will be displayed to the student.</p>
+    <textarea id="rejectReason" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 mb-5" rows="4" placeholder="e.g. Uploaded documents are unclear. Please resubmit with better quality images."></textarea>
+    <div class="flex gap-3">
+      <button onclick="confirmReject()" class="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:brightness-90 transition text-sm">Confirm Rejection</button>
+      <button onclick="closeReject()" class="flex-1 py-3 border-2 border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition text-sm">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400 mt-auto">
+  EaseMyConcession &mdash; Admin Portal &nbsp;&middot;&nbsp; Saraswati College of Engineering, Kharghar
+</footer>
+
+<script>
+  if (!localStorage.getItem('adminToken')) location.href = '/admin-login';
+  const atk = () => localStorage.getItem('adminToken') || '';
+  const af  = (u, o={}) => fetch(u, { ...o, headers: { 'Authorization': `Bearer ${atk()}`, 'Content-Type': 'application/json', ...(o.headers||{}) } });
+  const fmt = d => d ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+  const badge = s => {
+    const m = {'Pending':'bg-amber-100 text-amber-700','Under Verification':'bg-purple-100 text-purple-700','Approved':'bg-green-100 text-green-700','Rejected':'bg-red-100 text-red-700'};
+    return `<span class="inline-flex px-2.5 py-1 rounded-lg text-xs font-bold ${m[s]||'bg-slate-100 text-slate-600'}">${s}</span>`;
+  };
+
+  let cf = '', rid = null;
+  const au = JSON.parse(localStorage.getItem('adminUser') || '{}');
+  document.getElementById('adminName').textContent = au.username || 'Admin';
+
+  function filt(btn) {
+    document.querySelectorAll('.filter').forEach(b => { b.className = 'filter px-4 py-2 rounded-xl border text-sm font-semibold transition bg-white text-slate-500 border-slate-200 hover:border-[#0f2d5e] hover:text-[#0f2d5e]'; });
+    btn.className = 'filter px-4 py-2 rounded-xl border text-sm font-semibold transition bg-[#0f2d5e] text-white border-[#0f2d5e]';
+    cf = btn.dataset.s;
+    loadApps(cf);
+  }
+
+  async function loadStats() {
+    const r = await af('/api/admin/dashboard'); const d = await r.json();
+    if (r.ok) { document.getElementById('sT').textContent=d.stats.total; document.getElementById('sP').textContent=d.stats.pending; document.getElementById('sV').textContent=d.stats.under_verification; document.getElementById('sA').textContent=d.stats.approved; document.getElementById('sR').textContent=d.stats.rejected; }
+  }
+
+  async function loadApps(status='') {
+    ['loading','tableWrap','empty'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    document.getElementById('loading').classList.remove('hidden');
+    const r = await af(`/api/admin/applications${status?`?status=${encodeURIComponent(status)}`:''}`);
+    const d = await r.json();
+    document.getElementById('loading').classList.add('hidden');
+    if (!r.ok || !d.applications?.length) { document.getElementById('empty').classList.remove('hidden'); return; }
+    document.getElementById('tableWrap').classList.remove('hidden');
+    document.getElementById('tbody').innerHTML = d.applications.map(a => `
+      <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+        <td class="px-6 py-4">
+          <p class="font-semibold text-slate-800">${a.student_name}</p>
+          <p class="text-xs text-slate-400 mt-0.5">${a.email}</p>
+        </td>
+        <td class="px-6 py-4 font-mono text-xs text-slate-600">${a.college_id}</td>
+        <td class="px-6 py-4 text-slate-700">${a.source_station} &rarr; ${a.destination_station}</td>
+        <td class="px-6 py-4 text-slate-600">${a.duration}</td>
+        <td class="px-6 py-4 text-slate-400">${fmt(a.applied_date)}</td>
+        <td class="px-6 py-4">${badge(a.status)}</td>
+        <td class="px-6 py-4">
+          <div class="flex gap-2 flex-wrap">
+            <button onclick="viewDetail(${a.id})" class="inline-flex items-center gap-1 px-3 py-1.5 border-2 border-[#0f2d5e] text-[#0f2d5e] text-xs font-bold rounded-xl hover:bg-slate-50 transition">View</button>
+            ${a.status==='Pending'?`<button onclick="setVerify(${a.id})" class="inline-flex items-center gap-1 px-3 py-1.5 border-2 border-purple-400 text-purple-600 text-xs font-bold rounded-xl hover:bg-purple-50 transition">Verify</button>`:''}
+            ${['Pending','Under Verification'].includes(a.status)?`
+              <button onclick="approve(${a.id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-xs font-bold rounded-xl hover:brightness-90 transition">Approve</button>
+              <button onclick="openReject(${a.id})" class="inline-flex items-center gap-1 px-3 py-1.5 border-2 border-red-400 text-red-600 text-xs font-bold rounded-xl hover:bg-red-50 transition">Reject</button>`:''}
+            ${a.status==='Approved'?`<button onclick="dlPass(${a.id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-xs font-bold rounded-xl hover:brightness-90 transition">PDF</button>`:''}
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+
+  async function viewDetail(id) {
+    document.getElementById('modalTitle').textContent = `Application #${id}`;
+    document.getElementById('modalBody').innerHTML = '<div class="py-10 text-center"><div style="display:inline-block;width:24px;height:24px;border:2.5px solid rgba(0,0,0,.1);border-top-color:#0f2d5e;border-radius:50%;animation:spin .7s linear infinite;"></div></div>';
+    document.getElementById('detailModal').classList.remove('hidden');
+    document.getElementById('detailModal').classList.add('flex');
+    const r = await af(`/api/admin/application/${id}`); const d = await r.json();
+    if (!r.ok) { document.getElementById('modalBody').innerHTML = `<div class="text-red-600 text-sm p-4">${d.message}</div>`; return; }
+    const a = d.application, docs = d.documents || [];
+
+    // Build fields — always show all available data, never "undefined"
+    const fields = [
+      ['Student Name', a.student_name],
+      ['Email Address', a.email],
+      ['College ID', a.college_id],
+      ['Branch & Year', `${a.branch} · Year ${a.year}`],
+      ['Route', `${a.source_station} → ${a.destination_station}`],
+      ['Duration', a.duration],
+      ['Applied Date', fmt(a.applied_date)],
+      ['Current Status', a.status],
+    ];
+    if (a.pass_id)           fields.push(['Pass ID', a.pass_id]);
+    if (a.expiry_date)       fields.push(['Expiry Date', fmt(a.expiry_date)]);
+    if (a.rejection_reason)  fields.push(['Rejection Reason', a.rejection_reason]);
+
+    document.getElementById('modalBody').innerHTML = `
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        ${fields.map(([l,v]) => `
+          <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-100">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">${l}</p>
+            <p class="text-sm font-semibold text-slate-800 break-all">${v}</p>
+          </div>`).join('')}
+      </div>
+
+      ${docs.length ? `
+        <div class="mb-6">
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Uploaded Documents</p>
+          <div class="flex flex-wrap gap-2">
+            ${docs.map(doc => `
+              <a href="/api/admin/document?path=${encodeURIComponent(doc.file_path)}" target="_blank"
+                 class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-sm text-slate-600 hover:bg-slate-50 font-medium transition">
+                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                ${doc.document_type === 'bonafide' ? 'Bonafide Certificate' : doc.document_type === 'college_id' ? 'College ID Card' : 'Passport Photo'}
+              </a>`).join('')}
+          </div>
+        </div>` : ''}
+
+      <div class="flex gap-3 pt-5 border-t border-slate-100 flex-wrap">
+        ${['Pending','Under Verification'].includes(a.status) ? `
+          <button onclick="approve(${a.id});closeModal()" class="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl hover:brightness-90 transition flex items-center justify-center gap-2 text-sm">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            Approve Application
+          </button>
+          <button onclick="openReject(${a.id});closeModal()" class="flex-1 py-3 border-2 border-red-400 text-red-600 font-bold rounded-xl hover:bg-red-50 transition text-sm">Reject</button>` : ''}
+        ${a.status === 'Approved' ? `
+          <button onclick="dlPass(${a.id})" class="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl hover:brightness-90 transition flex items-center justify-center gap-2 text-sm">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download Pass PDF
+          </button>` : ''}
+      </div>`;
+  }
+
+  async function approve(id) {
+    const r = await af(`/api/admin/approve/${id}`,{method:'POST'}); const d = await r.json();
+    r.ok ? alert(`Approved! Pass ID: ${d.passId}`) : alert(d.message);
+    refresh();
+  }
+
+  async function setVerify(id) {
+    await af(`/api/admin/set-verification/${id}`,{method:'POST'});
+    refresh();
+  }
+
+  function openReject(id) { rid = id; document.getElementById('rejectReason').value=''; document.getElementById('rejectModal').classList.remove('hidden'); document.getElementById('rejectModal').classList.add('flex'); }
+  function closeReject()   { rid = null; document.getElementById('rejectModal').classList.add('hidden'); document.getElementById('rejectModal').classList.remove('flex'); }
+
+  async function confirmReject() {
+    const reason = document.getElementById('rejectReason').value.trim();
+    if (!reason) { alert('Please provide a rejection reason.'); return; }
+    const r = await af(`/api/admin/reject/${rid}`,{method:'POST',body:JSON.stringify({reason})});
+    const d = await r.json();
+    if (!r.ok) alert(d.message);
+    closeReject(); refresh();
+  }
+
+  async function dlPass(id) {
+    const r = await af(`/api/admin/download-pass/${id}`);
+    if (!r.ok) { const d = await r.json(); alert(d.message); return; }
+    const blob = await r.blob(); const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=`pass_${id}.pdf`; a.click(); URL.revokeObjectURL(url);
+  }
+
+  function closeModal() { document.getElementById('detailModal').classList.add('hidden'); document.getElementById('detailModal').classList.remove('flex'); }
+  function refresh()     { loadStats(); loadApps(cf); }
+  function adminLogout() { localStorage.removeItem('adminToken'); localStorage.removeItem('adminUser'); location.href='/admin-login'; }
+
+  refresh();
+</script>
+</body>
+</html>

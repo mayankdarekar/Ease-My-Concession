@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Sign Up — Ease My Concession</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>body{font-family:'Plus Jakarta Sans',sans-serif;} @keyframes spin{to{transform:rotate(360deg)}}</style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-[#0f2d5e] to-[#1e4ea0] flex items-center justify-center p-4 py-10">
+<div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
+  <div class="text-center mb-6">
+    <div class="w-12 h-12 bg-[#0f2d5e] rounded-xl flex items-center justify-center mx-auto mb-3">
+      <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+    </div>
+    <h2 class="text-2xl font-bold text-[#0f2d5e]" style="font-family:'Outfit',sans-serif;">Create Account</h2>
+    <p class="text-slate-400 text-sm mt-1">Register to apply for railway concession</p>
+  </div>
+  <div id="alert"></div>
+  <form id="form">
+    <div class="mb-3">
+      <label class="block text-sm font-semibold mb-1.5 text-slate-700">Full Name</label>
+      <input id="name" type="text" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition" placeholder="Rahul Sharma" required/>
+    </div>
+    <div class="mb-3">
+      <label class="block text-sm font-semibold mb-1.5 text-slate-700">Email Address</label>
+      <input id="email" type="email" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition" placeholder="you@college.edu" required/>
+    </div>
+    <div class="mb-3">
+      <label class="block text-sm font-semibold mb-1.5 text-slate-700">Password</label>
+      <input id="password" type="password" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition" placeholder="Minimum 6 characters" required/>
+    </div>
+    <div class="mb-3">
+      <label class="block text-sm font-semibold mb-1.5 text-slate-700">College ID</label>
+      <input id="college_id" type="text" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition" placeholder="e.g. STU2024001" required/>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <div>
+        <label class="block text-sm font-semibold mb-1.5 text-slate-700">Branch</label>
+        <select id="branch" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 transition bg-white" required>
+          <option value="">Select Branch</option>
+          <option>Computer Engineering</option>
+          <option>Computer Science (Data Science)</option>
+          <option>Information Technology</option>
+          <option>Electronics & Telecom</option>
+          <option>Mechanical Engineering</option>
+          <option>Civil Engineering</option>
+          <option>Electrical Engineering</option>
+          <option>Chemical Engineering</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1.5 text-slate-700">Year</label>
+        <select id="year" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 transition bg-white" required>
+          <option value="">Select Year</option>
+          <option value="1">1st Year (FE)</option>
+          <option value="2">2nd Year (SE)</option>
+          <option value="3">3rd Year (TE)</option>
+          <option value="4">4th Year (BE)</option>
+        </select>
+      </div>
+    </div>
+    <button type="submit" id="btn" class="w-full py-3.5 bg-[#0f2d5e] text-white font-bold rounded-xl hover:brightness-90 transition flex items-center justify-center gap-2">
+      Create Account
+    </button>
+  </form>
+  <p class="text-center text-sm text-slate-400 mt-5">Already have an account? <a href="/login" class="text-blue-500 font-semibold hover:underline">Login</a></p>
+</div>
+<script>
+  if (localStorage.getItem('token')) location.href = '/dashboard';
+  document.getElementById('form').onsubmit = async (e) => {
+    e.preventDefault();
+    const alertEl = document.getElementById('alert');
+    const btn     = document.getElementById('btn');
+    alertEl.innerHTML = '';
+    const pw = document.getElementById('password').value;
+    if (pw.length < 6) {
+      alertEl.innerHTML = `<div class="flex items-center gap-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm p-3 rounded-xl mb-4">Password must be at least 6 characters.</div>`;
+      return;
+    }
+    btn.disabled = true;
+    btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;"></span> Creating account...';
+    try {
+      const res  = await fetch('/api/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: document.getElementById('name').value, email: document.getElementById('email').value, password: pw, college_id: document.getElementById('college_id').value, branch: document.getElementById('branch').value, year: parseInt(document.getElementById('year').value) }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user',  JSON.stringify(data.user));
+      location.href = '/dashboard';
+    } catch(err) {
+      alertEl.innerHTML = `<div class="flex items-center gap-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm p-3 rounded-xl mb-4">${err.message}</div>`;
+      btn.disabled = false;
+      btn.innerHTML = 'Create Account';
+    }
+  };
+</script>
+</body>
+</html>

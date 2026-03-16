@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Apply for Pass — Ease My Concession</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .upload-area { position: relative; cursor: pointer; transition: all .2s; }
+    .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-area:hover { border-color: #3b82f6 !important; background: #eff6ff !important; }
+    .upload-area.has-file { border-color: #16a34a !important; background: #f0fdf4 !important; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<!-- Navbar -->
+<nav class="h-[72px] flex items-center justify-between bg-white border-b border-slate-200 px-6 md:px-12 sticky top-0 z-50 shadow-sm">
+  <a href="/" class="font-extrabold text-xl text-[#0f2d5e] flex items-center gap-2.5 no-underline" style="font-family:'Outfit',sans-serif;">
+    <svg class="w-7 h-7" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#0f2d5e"/><path d="M6 20h20M8 20v-8a2 2 0 012-2h12a2 2 0 012 2v8M10 24h2M20 24h2" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="22" r="2" fill="#f97316"/><circle cx="21" cy="22" r="2" fill="#f97316"/></svg>
+    EaseMyConcession
+  </a>
+  <div class="flex gap-3">
+    <a href="/dashboard" class="px-4 py-2 border-2 border-[#0f2d5e] text-[#0f2d5e] font-semibold text-sm rounded-xl hover:bg-slate-50 transition flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      Dashboard
+    </a>
+    <button onclick="localStorage.clear();location.href='/login'" class="px-4 py-2 border-2 border-slate-200 text-slate-500 font-semibold text-sm rounded-xl hover:bg-slate-50 transition">Logout</button>
+  </div>
+</nav>
+
+<div class="max-w-2xl mx-auto px-6 py-10">
+  <a href="/dashboard" class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 mb-6 transition">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    Back to Dashboard
+  </a>
+
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <!-- Card header -->
+    <div class="bg-[#0f2d5e] px-8 py-6">
+      <h1 class="text-2xl font-extrabold text-white" style="font-family:'Outfit',sans-serif;">New Application</h1>
+      <p class="text-blue-200 text-sm mt-1">Fill in your route details and upload the required documents</p>
+    </div>
+
+    <div class="p-8">
+      <div id="alert"></div>
+      <form id="form">
+
+        <!-- Route section -->
+        <div class="mb-8">
+          <div class="flex items-center gap-2 mb-5">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-[#0f2d5e]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-[#0f2d5e] uppercase tracking-wider">Route Information</h2>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1.5">Source Station <span class="text-red-500">*</span></label>
+              <input id="src" type="text" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition" placeholder="e.g. Panvel" required/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1.5">Destination Station <span class="text-red-500">*</span></label>
+              <input id="dest" type="text" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition" placeholder="e.g. CST Mumbai" required/>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Pass Duration <span class="text-red-500">*</span></label>
+            <select id="dur" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-400 transition bg-white">
+              <option value="Monthly">Monthly — Valid for 1 month from approval date</option>
+              <option value="Quarterly">Quarterly — Valid for 3 months from approval date</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-slate-100 mb-8"></div>
+
+        <!-- Documents section -->
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-[#0f2d5e] uppercase tracking-wider">Upload Documents</h2>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 mb-5 ml-10">Accepted formats: JPG, PNG, PDF &nbsp;·&nbsp; Maximum size: 5 MB per file</p>
+
+          <!-- Bonafide Certificate -->
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Bonafide Certificate <span class="text-red-500">*</span>
+            </label>
+            <div class="upload-area border-2 border-dashed border-slate-200 rounded-xl p-5 bg-slate-50" id="area1">
+              <input type="file" id="bonafide" accept=".pdf,.jpg,.jpeg,.png" required onchange="handleFile(this,'area1','name1','icon1')"/>
+              <div class="flex items-center gap-4 pointer-events-none">
+                <div class="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm" id="icon1">
+                  <svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm font-semibold text-slate-600" id="name1">Click to upload or drag and drop</p>
+                  <p class="text-xs text-slate-400 mt-0.5">Official bonafide certificate from your college</p>
+                </div>
+                <svg class="w-5 h-5 text-slate-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- College ID Card -->
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              College ID Card <span class="text-red-500">*</span>
+            </label>
+            <div class="upload-area border-2 border-dashed border-slate-200 rounded-xl p-5 bg-slate-50" id="area2">
+              <input type="file" id="cid" accept=".pdf,.jpg,.jpeg,.png" required onchange="handleFile(this,'area2','name2','icon2')"/>
+              <div class="flex items-center gap-4 pointer-events-none">
+                <div class="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm" id="icon2">
+                  <svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2"/></svg>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm font-semibold text-slate-600" id="name2">Click to upload or drag and drop</p>
+                  <p class="text-xs text-slate-400 mt-0.5">Front side of your student ID card</p>
+                </div>
+                <svg class="w-5 h-5 text-slate-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Passport Photo -->
+          <div class="mb-6">
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Passport Size Photo <span class="text-red-500">*</span>
+            </label>
+            <div class="upload-area border-2 border-dashed border-slate-200 rounded-xl p-5 bg-slate-50" id="area3">
+              <input type="file" id="photo" accept=".jpg,.jpeg,.png" required onchange="handleFile(this,'area3','name3','icon3')"/>
+              <div class="flex items-center gap-4 pointer-events-none">
+                <div class="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm" id="icon3">
+                  <svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm font-semibold text-slate-600" id="name3">Click to upload or drag and drop</p>
+                  <p class="text-xs text-slate-400 mt-0.5">Recent passport size photo (JPG or PNG only)</p>
+                </div>
+                <svg class="w-5 h-5 text-slate-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info note -->
+        <div class="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
+          <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <p class="text-sm text-blue-700">After submission, your application will be reviewed by the college authority. You will be notified once approved or rejected.</p>
+        </div>
+
+        <button type="submit" id="btn" class="w-full py-3.5 bg-[#0f2d5e] text-white font-bold rounded-xl hover:brightness-90 transition flex items-center justify-center gap-2 text-base">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          Submit Application
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<footer class="bg-slate-100 border-t border-slate-200 py-4 text-center text-xs text-slate-400 mt-10">
+  EaseMyConcession — Student Portal
+</footer>
+
+<script>
+  if (!localStorage.getItem('token')) location.href = '/login';
+
+  function handleFile(input, areaId, nameId, iconId) {
+    const file = input.files[0];
+    const area = document.getElementById(areaId);
+    const name = document.getElementById(nameId);
+    const icon = document.getElementById(iconId);
+    if (file) {
+      area.classList.add('has-file');
+      name.textContent = file.name;
+      name.style.color = '#166534';
+      icon.innerHTML = '<svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+      icon.style.background = '#dcfce7';
+      icon.style.border = '1px solid #86efac';
+    }
+  }
+
+  document.getElementById('form').onsubmit = async (e) => {
+    e.preventDefault();
+    const alertEl = document.getElementById('alert');
+    alertEl.innerHTML = '';
+    const b = document.getElementById('bonafide').files[0];
+    const c = document.getElementById('cid').files[0];
+    const p = document.getElementById('photo').files[0];
+    if (!b || !c || !p) {
+      alertEl.innerHTML = `<div class="flex items-center gap-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm p-4 rounded-xl mb-4"><svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Please upload all three documents.</div>`;
+      return;
+    }
+    const btn = document.getElementById('btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span style="display:inline-block;width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;"></span> Submitting application...';
+    const fd = new FormData();
+    fd.append('source_station',      document.getElementById('src').value);
+    fd.append('destination_station', document.getElementById('dest').value);
+    fd.append('duration',            document.getElementById('dur').value);
+    fd.append('bonafide', b);
+    fd.append('college_id', c);
+    fd.append('photo', p);
+    try {
+      const res  = await fetch('/api/student/apply-pass', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      alertEl.innerHTML = `<div class="flex items-center gap-3 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm p-4 rounded-xl mb-4"><svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Application #${data.applicationId} submitted successfully! Redirecting to status page...</div>`;
+      setTimeout(() => location.href = '/status', 2000);
+    } catch(err) {
+      alertEl.innerHTML = `<div class="flex items-center gap-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm p-4 rounded-xl mb-4"><svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>${err.message}</div>`;
+      btn.disabled = false;
+      btn.innerHTML = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Submit Application';
+    }
+  };
+</script>
+</body>
+</html>
