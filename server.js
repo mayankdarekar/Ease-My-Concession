@@ -1,3 +1,4 @@
+require('dotenv').config();
 // ═══════════════════════════════════════════════════════════
 //  Ease My Concession — Complete Server (single file)
 //  Run: node server.js
