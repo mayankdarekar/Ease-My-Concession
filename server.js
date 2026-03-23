@@ -190,15 +190,15 @@ app.get('/admin-dashboard', page('admin-dashboard.html'));
 // ── Auth Routes ───────────────────────────────────────────
 app.post('/api/signup', async (req, res) => {
   try {
-    const { name, email, password, college_id, branch, year } = req.body;
+    const { name, email, password, college_id, branch, year, gender, age, dob, phone, address } = req.body;
     if (!name || !email || !password || !college_id || !branch || !year)
       return res.status(400).json({ message: 'All fields are required.' });
     const [exists] = await db.query('SELECT id FROM students WHERE email=? OR college_id=?', [email, college_id]);
     if (exists.length) return res.status(409).json({ message: 'Email or College ID already registered.' });
     const hash = await bcrypt.hash(password, 10);
     const [r]  = await db.query(
-      'INSERT INTO students (name,email,password,college_id,branch,year) VALUES (?,?,?,?,?,?)',
-      [name, email, hash, college_id, branch, parseInt(year)]
+      'INSERT INTO students (name,email,password,college_id,branch,year,gender,age,dob,phone,address) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+      [name, email, hash, college_id, branch, parseInt(year), gender||null, age||null, dob||null, phone||null, address||null]
     );
     const token = signToken({ id: r.insertId, role: 'student', name, email });
     res.status(201).json({ token, user: { id: r.insertId, name, email, college_id, branch, year } });
