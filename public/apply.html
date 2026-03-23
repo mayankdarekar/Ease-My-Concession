@@ -94,10 +94,10 @@
           </div>
           <p class="text-xs text-slate-400 mb-5 ml-10">Accepted formats: JPG, PNG, PDF &nbsp;·&nbsp; Maximum size: 5 MB per file</p>
 
-          <!-- Bonafide Certificate -->
+          <!-- Aadhar Card -->
           <div class="mb-4">
             <label class="block text-sm font-semibold text-slate-700 mb-2">
-              Bonafide Certificate <span class="text-red-500">*</span>
+              Aadhar Card <span class="text-red-500">*</span>
             </label>
             <div class="upload-area border-2 border-dashed border-slate-200 rounded-xl p-5 bg-slate-50" id="area1">
               <input type="file" id="bonafide" accept=".pdf,.jpg,.jpeg,.png" required onchange="handleFile(this,'area1','name1','icon1')"/>
@@ -107,7 +107,7 @@
                 </div>
                 <div class="flex-1">
                   <p class="text-sm font-semibold text-slate-600" id="name1">Click to upload or drag and drop</p>
-                  <p class="text-xs text-slate-400 mt-0.5">Official bonafide certificate from your college</p>
+                  <p class="text-xs text-slate-400 mt-0.5">Official aadhar card from your college</p>
                 </div>
                 <svg class="w-5 h-5 text-slate-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
               </div>
@@ -132,27 +132,6 @@
                 <svg class="w-5 h-5 text-slate-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
               </div>
             </div>
-          </div>
-
-          <!-- Passport Photo -->
-          <div class="mb-6">
-            <label class="block text-sm font-semibold text-slate-700 mb-2">
-              Passport Size Photo <span class="text-red-500">*</span>
-            </label>
-            <div class="upload-area border-2 border-dashed border-slate-200 rounded-xl p-5 bg-slate-50" id="area3">
-              <input type="file" id="photo" accept=".jpg,.jpeg,.png" required onchange="handleFile(this,'area3','name3','icon3')"/>
-              <div class="flex items-center gap-4 pointer-events-none">
-                <div class="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm" id="icon3">
-                  <svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                </div>
-                <div class="flex-1">
-                  <p class="text-sm font-semibold text-slate-600" id="name3">Click to upload or drag and drop</p>
-                  <p class="text-xs text-slate-400 mt-0.5">Recent passport size photo (JPG or PNG only)</p>
-                </div>
-                <svg class="w-5 h-5 text-slate-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Info note -->
@@ -198,7 +177,6 @@
     alertEl.innerHTML = '';
     const b = document.getElementById('bonafide').files[0];
     const c = document.getElementById('cid').files[0];
-    const p = document.getElementById('photo').files[0];
     if (!b || !c || !p) {
       alertEl.innerHTML = `<div class="flex items-center gap-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm p-4 rounded-xl mb-4"><svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Please upload all three documents.</div>`;
       return;
@@ -212,7 +190,6 @@
     fd.append('duration',            document.getElementById('dur').value);
     fd.append('bonafide', b);
     fd.append('college_id', c);
-    fd.append('photo', p);
     try {
       const res  = await fetch('/api/student/apply-pass', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: fd });
       const data = await res.json();

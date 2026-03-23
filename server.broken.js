@@ -1,20 +1,17 @@
 const { syncToSheet } = require("./sheets");
 const { generateOfficialPass } = require("./official-pass");
-const { generateOverlayPass } = require("./overlay-pass");
-// ═══════════════════════════════════════════════════════════
-//  Ease My Concession — Complete Server
-//  Run: node server.js
-// ═══════════════════════════════════════════════════════════
 
-const express  = require('express');
-const mysql    = require('mysql2/promise');
-const bcrypt   = require('bcryptjs');
-const jwt      = require('jsonwebtoken');
-const multer   = require('multer');
-const PDFDoc   = require('pdfkit');
-const QRCode   = require('qrcode');
-const path     = require('path');
-const fs       = require('fs');
+const express = require("express");
+const mysql = require("mysql2/promise");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const PDFDoc = require("pdfkit");
+const QRCode = require("qrcode");
+const path = require("path");
+const fs = require("fs");
+
+// ═══════════════════════════════════════════════════════════
 
 const app     = express();
 const PORT    = 3000;
@@ -190,18 +187,30 @@ app.get('/admin-dashboard', page('admin-dashboard.html'));
 // ── Auth Routes ───────────────────────────────────────────
 app.post('/api/signup', async (req, res) => {
   try {
-    const { name, email, password, college_id, branch, year } = req.body;
+    const { name, email, password, college_id, branch, year, gender, age, dob, phone, address } = req.body;
     if (!name || !email || !password || !college_id || !branch || !year)
       return res.status(400).json({ message: 'All fields are required.' });
     const [exists] = await db.query('SELECT id FROM students WHERE email=? OR college_id=?', [email, college_id]);
     if (exists.length) return res.status(409).json({ message: 'Email or College ID already registered.' });
     const hash = await bcrypt.hash(password, 10);
     const [r]  = await db.query(
-      'INSERT INTO students (name,email,password,college_id,branch,year) VALUES (?,?,?,?,?,?)',
-      [name, email, hash, college_id, branch, parseInt(year)]
+      'INSERT INTO students (name,email,password,college_id,branch,year,gender,age,dob,phone,address) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+      [name, email, hash, college_id, branch, parseInt(year), gender||null, age||null, dob||null, phone||null, address||null]
     );
     const token = signToken({ id: r.insertId, role: 'student', name, email });
-    res.status(201).json({ token, user: { id: r.insertId, name, email, college_id, branch, year } });
+    const studentRows = await db.query('SELECT * FROM students WHERE id=?', [req.user.id]);
+const student = studentRows[0][0];
+
+if (student) {
+  syncToSheet(student, {
+    pass_id: 'B' + String(r.insertId).padStart(6, '0'),
+    duration,
+    source_station,
+    destination_station
+  }).catch(e => console.error('Sheets:', e.message));
+}
+
+res.status(201).json({ message: 'Application submitted!', applicationId: r.insertId });
   } catch(e) { res.status(500).json({ message: e.message }); }
 });
 
@@ -259,9 +268,13 @@ app.post('/api/student/apply-pass', auth, upload.fields([
           [r.insertId, type, files[0].path.replace(/\\/g, '/')]);
       }
     }
-    const [sRows] = await db.query("SELECT * FROM students WHERE id=?", [req.user.id]);
-    if (sRows.length) syncToSheet(sRows[0], { duration, source_station, destination_station }).catch(e => console.error("Sheets:", e.message));
-    res.status(201).json({ message: "Application submitted!", applicationId: r.insertId });
+    pass_id: 'B' + String(r.insertId).padStart(6, '0'),
+    duration,
+    source_station,
+    destination_station
+  }).catch(e => console.error('Sheets:', e.message));
+}
+res.status(201).json({ message: 'Application submitted!', applicationId: r.insertId });
   } catch(e) { res.status(500).json({ message: e.message }); }
 });
 
@@ -290,11 +303,11 @@ app.get('/api/student/application/:id', auth, async (req, res) => {
 app.get('/api/student/download-pass/:id', auth, async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT a.*,s.name,s.college_id,s.branch,s.year,s.gender,s.age,s.dob,s.address FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=? AND a.student_id=? AND a.status='Approved'",
+      "SELECT a.*,s.name,s.college_id,s.branch,s.year FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=? AND a.student_id=? AND a.status='Approved'",
       [req.params.id, req.user.id]
     );
     if (!rows.length) return res.status(404).json({ message: 'Approved pass not found.' });
-    const a = rows[0];
+    const a   = rows[0];
     const pdf = await generatePDF({ passId: a.pass_id, name: a.name, collegeId: a.college_id, branch: a.branch, year: a.year, source: a.source_station, dest: a.destination_station, duration: a.duration, issued: a.applied_date, expiry: a.expiry_date });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="pass_${a.pass_id}.pdf"`);
@@ -367,7 +380,7 @@ app.post('/api/admin/set-verification/:id', adminAuth, async (req, res) => {
 app.get('/api/admin/download-pass/:id', adminAuth, async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT a.*,s.name,s.college_id,s.branch,s.year,s.gender,s.age,s.dob,s.address FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=? AND a.status='Approved'",
+      "SELECT a.*,s.name,s.college_id,s.branch,s.year FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=? AND a.status='Approved'",
       [req.params.id]
     );
     if (!rows.length) return res.status(404).json({ message: 'Not found.' });
@@ -393,3 +406,34 @@ app.listen(PORT, () => {
   console.log(`\n🚂  Ease My Concession is running!`);
   console.log(`📡  http://localhost:${PORT}\n`);
 });
+
+app.get('/api/admin/download-pass/:id', adminAuth, async (req, res) => {
+  const [rows] = await db.query(
+    'SELECT a.*, s.* FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=?',
+    [req.params.id]
+  );
+
+  if (!rows.length) return res.status(404).json({ message: 'Not found' });
+
+  const a = rows[0];
+
+  const pdf = await generateOfficialPass({
+    passNo: a.pass_id,
+    studentName: a.name,
+    age: a.age,
+    dob: a.dob ? new Date(a.dob).toLocaleDateString('en-IN') : '',
+    gender: a.gender,
+    branch: a.branch,
+    year: a.year,
+    from: a.source_station,
+    to: a.destination_station,
+    duration: a.duration,
+    issueDate: new Date(a.applied_date).toLocaleDateString('en-IN'),
+    expiryDate: new Date(a.expiry_date).toLocaleDateString('en-IN')
+  });
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'attachment; filename=pass.pdf');
+  res.send(pdf);
+});
+
