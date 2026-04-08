@@ -290,15 +290,13 @@ app.get('/api/student/application/:id', auth, async (req, res) => {
 app.get('/api/student/download-pass/:id', auth, async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT a.*,s.name,s.college_id,s.branch,s.year,s.gender,s.age,s.dob,s.address FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=? AND a.student_id=? AND a.status='Approved'",
+      "SELECT * FROM applications WHERE id=? AND student_id=? AND status='Approved'",
       [req.params.id, req.user.id]
     );
     if (!rows.length) return res.status(404).json({ message: 'Approved pass not found.' });
-    const a = rows[0];
-    const pdf = await generatePDF({ passId: a.pass_id, name: a.name, collegeId: a.college_id, branch: a.branch, year: a.year, source: a.source_station, dest: a.destination_station, duration: a.duration, issued: a.applied_date, expiry: a.expiry_date });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="pass_${a.pass_id}.pdf"`);
-    res.send(pdf);
+    res.setHeader('Content-Disposition', 'attachment; filename="concession-pass.pdf"');
+    res.sendFile(require('path').join(__dirname, 'public', 'concession-form.pdf'));
   } catch(e) { res.status(500).json({ message: e.message }); }
 });
 
@@ -367,15 +365,13 @@ app.post('/api/admin/set-verification/:id', adminAuth, async (req, res) => {
 app.get('/api/admin/download-pass/:id', adminAuth, async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT a.*,s.name,s.college_id,s.branch,s.year,s.gender,s.age,s.dob,s.address FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=? AND a.status='Approved'",
+      "SELECT * FROM applications WHERE id=? AND status='Approved'",
       [req.params.id]
     );
     if (!rows.length) return res.status(404).json({ message: 'Not found.' });
-    const a   = rows[0];
-    const pdf = await generatePDF({ passId: a.pass_id, name: a.name, collegeId: a.college_id, branch: a.branch, year: a.year, source: a.source_station, dest: a.destination_station, duration: a.duration, issued: a.applied_date, expiry: a.expiry_date });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="pass_${a.pass_id}.pdf"`);
-    res.send(pdf);
+    res.setHeader('Content-Disposition', 'attachment; filename="concession-pass.pdf"');
+    res.sendFile(require('path').join(__dirname, 'public', 'concession-form.pdf'));
   } catch(e) { res.status(500).json({ message: e.message }); }
 });
 
