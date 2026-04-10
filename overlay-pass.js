@@ -1,69 +1,62 @@
-const PDFDoc = require('pdfkit');
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
+const fs   = require('fs');
+const path = require('path');
 
 const OFFSET_X = 0;
 const OFFSET_Y = 0;
 
 async function generateOverlayPass(data) {
-  return new Promise((resolve, reject) => {
-    const W = 787.9;
-    const H = 598.2;
+  const formPath  = path.join(__dirname, 'public', 'concession-form.pdf');
+  const formBytes = fs.readFileSync(formPath);
+  const pdfDoc    = await PDFDocument.load(formBytes);
+  const page      = pdfDoc.getPages()[0];
+  const font      = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold  = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    const doc = new PDFDoc({
-      size: [W, H],
-      margins: { top: 0, bottom: 0, left: 0, right: 0 },
+  const put = (text, x, y, opts = {}) => {
+    page.drawText(String(text || ''), {
+      x:        x + OFFSET_X,
+      y:        y + OFFSET_Y,
+      size:     opts.size || 8,
+      font:     opts.bold ? fontBold : font,
+      color:    rgb(0, 0, 0),
+      maxWidth: opts.maxWidth || 200,
     });
+  };
 
-    const chunks = [];
-    doc.on('data',  c => chunks.push(c));
-    doc.on('end',   () => resolve(Buffer.concat(chunks)));
-    doc.on('error', reject);
+  // LEFT HALF
+  put(data.studentName,        105, 332, { size: 8, bold: true, maxWidth: 165 });
+  put(data.classOfTravel||'II', 45, 270, { size: 8, bold: true });
+  put(data.issueDate||'',       90, 270, { size: 7, maxWidth: 50 });
+  put(data.expiryDate||'',     148, 270, { size: 7, maxWidth: 50 });
+  put(data.from||'',           205, 270, { size: 8, bold: true, maxWidth: 80 });
+  put(data.to||'',             300, 270, { size: 8, bold: true, maxWidth: 80 });
+  put(data.issueDate||'',      160, 133, { size: 7 });
+  put(data.expiryDate||'',     270, 116, { size: 7 });
+  put(data.issueDate||'',       98,  44, { size: 7.5 });
 
-    doc.fillColor('#000000');
+  // RIGHT HALF
+  put(data.studentName,        490, 450, { size: 7.5, bold: true, maxWidth: 130 });
+  put(data.age||'',            480, 422, { size: 7.5 });
+  put(data.dob||'',            555, 422, { size: 7 });
+  put(data.studentName,        530, 404, { size: 7.5, bold: true, maxWidth: 155 });
+  put(data.age||'',            470, 388, { size: 7.5 });
+  put(data.dob||'',            640, 388, { size: 7, maxWidth: 100 });
+  put(data.classOfTravel||'II', 415, 270, { size: 8, bold: true });
+  put(data.issueDate||'',       460, 270, { size: 7, maxWidth: 50 });
+  put(data.expiryDate||'',      518, 270, { size: 7, maxWidth: 50 });
+  put(data.from||'',            575, 270, { size: 8, bold: true, maxWidth: 90 });
+  put(data.to||'',              672, 270, { size: 8, bold: true, maxWidth: 90 });
+  put('NIL',                    595, 192, { size: 8 });
+  put('NIL',                    720, 192, { size: 8 });
+  put(data.from||'',            435, 174, { size: 8 });
+  put(data.to||'',              540, 174, { size: 8 });
+  put(data.expiryDate||'',      475, 156, { size: 8 });
+  put(data.issueDate||'',       460, 138, { size: 8 });
+  put('Saraswati College of Engineering, Kharghar', 460, 120, { size: 7, maxWidth: 240 });
+  put(data.issueDate||'',       475,  44, { size: 7.5 });
 
-    const px = (x) => x * (W / 1222) + OFFSET_X;
-    const py = (y) => y * (H / 984)  + OFFSET_Y;
-
-    const put = (text, x, y, opts = {}) => {
-      doc.fontSize(opts.size || 8)
-         .font(opts.bold ? 'Helvetica-Bold' : 'Helvetica')
-         .text(String(text || ''), px(x), py(y), {
-           width: opts.width ? opts.width * (W / 1222) : undefined,
-           lineBreak: false,
-         });
-    };
-
-    // LEFT HALF
-    put(data.studentName || '', 114, 308, { size: 8, width: 220 });
-    put(data.classOfTravel || 'II', 62,  390, { size: 8, bold: true });
-    put(data.issueDate || '',       138, 390, { size: 7, width: 70 });
-    put(data.from || '',            220, 390, { size: 8, bold: true, width: 120 });
-    put(data.to || '',              365, 390, { size: 8, bold: true, width: 120 });
-    put(data.issueDate || '',       186, 528, { size: 7 });
-    put(data.expiryDate || '',      370, 555, { size: 7 });
-    put(data.issueDate || '',       100, 912, { size: 8 });
-
-    // RIGHT HALF
-    put(data.studentName || '',    650, 163, { size: 7.5, width: 200 });
-    put(data.age || '',            700, 198, { size: 7.5 });
-    put(data.dob || '',            755, 198, { size: 7 });
-    put(data.studentName || '',    852, 212, { size: 7.5, width: 170 });
-    put(data.age || '',            700, 226, { size: 7.5 });
-    put(data.dob || '',           1005, 226, { size: 7, width: 120 });
-    put(data.classOfTravel || 'II', 640, 398, { size: 8, bold: true });
-    put(data.issueDate || '',       700, 398, { size: 7, width: 80 });
-    put(data.from || '',            810, 398, { size: 8, bold: true, width: 115 });
-    put(data.to || '',              955, 398, { size: 8, bold: true, width: 115 });
-    put(`${data.classOfTravel||'II'}/1`, 1093, 398, { size: 7 });
-    put('NIL',                     870, 470, { size: 8 });
-    put('NIL',                    1100, 470, { size: 8 });
-    put(data.from || '',           648, 498, { size: 8 });
-    put(data.to || '',             785, 498, { size: 8 });
-    put(data.expiryDate || '',     680, 520, { size: 8 });
-    put(data.issueDate || '',      660, 560, { size: 8 });
-    put('Saraswati College of Engineering, Kharghar', 650, 585, { size: 7, width: 360 });
-
-    doc.end();
-  });
+  return Buffer.from(await pdfDoc.save());
 }
 
 module.exports = { generateOverlayPass };

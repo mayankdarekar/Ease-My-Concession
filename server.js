@@ -290,13 +290,23 @@ app.get('/api/student/application/:id', auth, async (req, res) => {
 app.get('/api/student/download-pass/:id', auth, async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT * FROM applications WHERE id=? AND student_id=? AND status='Approved'",
+      "SELECT a.*,s.name,s.college_id,s.branch,s.year,s.gender,s.age,s.dob FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=? AND a.student_id=? AND a.status='Approved'",
       [req.params.id, req.user.id]
     );
     if (!rows.length) return res.status(404).json({ message: 'Approved pass not found.' });
+    const a = rows[0];
+    const { generateOverlayPass } = require('./overlay-pass');
+    const pdf = await generateOverlayPass({
+      studentName: a.name, age: a.age||'',
+      dob: a.dob ? new Date(a.dob).toLocaleDateString('en-IN') : '',
+      from: a.source_station, to: a.destination_station,
+      duration: a.duration, classOfTravel: 'II',
+      issueDate: new Date(a.applied_date).toLocaleDateString('en-IN'),
+      expiryDate: new Date(a.expiry_date).toLocaleDateString('en-IN'),
+    });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="concession-pass.pdf"');
-    res.sendFile(require('path').join(__dirname, 'public', 'concession-form.pdf'));
+    res.setHeader('Content-Disposition', `attachment; filename="pass_${a.pass_id}.pdf"`);
+    res.send(pdf);
   } catch(e) { res.status(500).json({ message: e.message }); }
 });
 
@@ -365,13 +375,23 @@ app.post('/api/admin/set-verification/:id', adminAuth, async (req, res) => {
 app.get('/api/admin/download-pass/:id', adminAuth, async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT * FROM applications WHERE id=? AND status='Approved'",
+      "SELECT a.*,s.name,s.college_id,s.branch,s.year,s.gender,s.age,s.dob FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=? AND a.status='Approved'",
       [req.params.id]
     );
     if (!rows.length) return res.status(404).json({ message: 'Not found.' });
+    const a = rows[0];
+    const { generateOverlayPass } = require('./overlay-pass');
+    const pdf = await generateOverlayPass({
+      studentName: a.name, age: a.age||'',
+      dob: a.dob ? new Date(a.dob).toLocaleDateString('en-IN') : '',
+      from: a.source_station, to: a.destination_station,
+      duration: a.duration, classOfTravel: 'II',
+      issueDate: new Date(a.applied_date).toLocaleDateString('en-IN'),
+      expiryDate: new Date(a.expiry_date).toLocaleDateString('en-IN'),
+    });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="concession-pass.pdf"');
-    res.sendFile(require('path').join(__dirname, 'public', 'concession-form.pdf'));
+    res.setHeader('Content-Disposition', `attachment; filename="pass_${a.pass_id}.pdf"`);
+    res.send(pdf);
   } catch(e) { res.status(500).json({ message: e.message }); }
 });
 
