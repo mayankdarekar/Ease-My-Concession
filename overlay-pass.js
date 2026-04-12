@@ -6,8 +6,7 @@ const OFFSET_X = 0;
 const OFFSET_Y = 0;
 
 async function generateOverlayPass(data) {
-  const formPath  = path.join(__dirname, 'public', 'concession-form.pdf');
-  const formBytes = fs.readFileSync(formPath);
+  const formBytes = fs.readFileSync(path.join(__dirname, 'public', 'concession-form.pdf'));
   const pdfDoc    = await PDFDocument.load(formBytes);
   const page      = pdfDoc.getPages()[0];
   const font      = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -17,44 +16,44 @@ async function generateOverlayPass(data) {
     page.drawText(String(text || ''), {
       x:        x + OFFSET_X,
       y:        y + OFFSET_Y,
-      size:     opts.size || 8,
+      size:     opts.size || 9,
       font:     opts.bold ? fontBold : font,
       color:    rgb(0, 0, 0),
-      maxWidth: opts.maxWidth || 200,
+      maxWidth: opts.maxWidth || 300,
     });
   };
 
   // LEFT HALF
-  put(data.studentName,        105, 332, { size: 8, bold: true, maxWidth: 165 });
-  put(data.classOfTravel||'II', 45, 270, { size: 8, bold: true });
-  put(data.issueDate||'',       90, 270, { size: 7, maxWidth: 50 });
-  put(data.expiryDate||'',     148, 270, { size: 7, maxWidth: 50 });
-  put(data.from||'',           205, 270, { size: 8, bold: true, maxWidth: 80 });
-  put(data.to||'',             300, 270, { size: 8, bold: true, maxWidth: 80 });
-  put(data.issueDate||'',      160, 133, { size: 7 });
-  put(data.expiryDate||'',     270, 116, { size: 7 });
-  put(data.issueDate||'',       98,  44, { size: 7.5 });
+  put(data.studentName,           130, 659, { size: 9, bold: true, maxWidth: 250 });
+  put(data.classOfTravel || 'II',  38, 473, { size: 9, bold: true });
+  put(data.issueDate     || '',   112, 473, { size: 8, maxWidth: 70 });
+  put(data.expiryDate    || '',   200, 473, { size: 8, maxWidth: 70 });
+  put(data.from          || '',   290, 473, { size: 9, bold: true, maxWidth: 130 });
+  put(data.to            || '',   435, 473, { size: 9, bold: true, maxWidth: 130 });
+  put(data.issueDate     || '',   200, 276, { size: 8 });
+  put(data.expiryDate    || '',   335, 227, { size: 8 });
+  put(data.issueDate     || '',   120,  63, { size: 8.5 });
 
   // RIGHT HALF
-  put(data.studentName,        490, 450, { size: 7.5, bold: true, maxWidth: 130 });
-  put(data.age||'',            480, 422, { size: 7.5 });
-  put(data.dob||'',            555, 422, { size: 7 });
-  put(data.studentName,        530, 404, { size: 7.5, bold: true, maxWidth: 155 });
-  put(data.age||'',            470, 388, { size: 7.5 });
-  put(data.dob||'',            640, 388, { size: 7, maxWidth: 100 });
-  put(data.classOfTravel||'II', 415, 270, { size: 8, bold: true });
-  put(data.issueDate||'',       460, 270, { size: 7, maxWidth: 50 });
-  put(data.expiryDate||'',      518, 270, { size: 7, maxWidth: 50 });
-  put(data.from||'',            575, 270, { size: 8, bold: true, maxWidth: 90 });
-  put(data.to||'',              672, 270, { size: 8, bold: true, maxWidth: 90 });
-  put('NIL',                    595, 192, { size: 8 });
-  put('NIL',                    720, 192, { size: 8 });
-  put(data.from||'',            435, 174, { size: 8 });
-  put(data.to||'',              540, 174, { size: 8 });
-  put(data.expiryDate||'',      475, 156, { size: 8 });
-  put(data.issueDate||'',       460, 138, { size: 8 });
-  put('Saraswati College of Engineering, Kharghar', 460, 120, { size: 7, maxWidth: 240 });
-  put(data.issueDate||'',       475,  44, { size: 7.5 });
+  put(data.studentName,           850, 522, { size: 8.5, bold: true, maxWidth: 200 });
+  put(data.age           || '',   820, 492, { size: 8.5 });
+  put(data.dob           || '',   920, 492, { size: 8 });
+  put(data.studentName,           870, 462, { size: 8.5, bold: true, maxWidth: 230 });
+  put(data.age           || '',   770, 443, { size: 8.5 });
+  put(data.dob           || '',  1010, 443, { size: 8, maxWidth: 160 });
+  put(data.classOfTravel || 'II', 625, 473, { size: 9, bold: true });
+  put(data.issueDate     || '',   720, 473, { size: 8, maxWidth: 80 });
+  put(data.expiryDate    || '',   815, 473, { size: 8, maxWidth: 80 });
+  put(data.from          || '',   900, 473, { size: 9, bold: true, maxWidth: 110 });
+  put(data.to            || '',  1030, 473, { size: 9, bold: true, maxWidth: 110 });
+  put('NIL',                      950, 276, { size: 8.5 });
+  put('NIL',                     1130, 276, { size: 8.5 });
+  put(data.from          || '',   660, 256, { size: 8.5 });
+  put(data.to            || '',   860, 256, { size: 8.5 });
+  put(data.expiryDate    || '',   760, 237, { size: 8.5 });
+  put(data.issueDate     || '',   730, 197, { size: 8.5 });
+  put('Saraswati College of Engineering, Kharghar', 730, 167, { size: 7.5, maxWidth: 350 });
+  put(data.issueDate     || '',   760,  63, { size: 8.5 });
 
   return Buffer.from(await pdfDoc.save());
 }

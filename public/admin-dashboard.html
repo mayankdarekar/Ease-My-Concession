@@ -192,7 +192,7 @@
             ${['Pending','Under Verification'].includes(a.status)?`
               <button onclick="approve(${a.id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-xs font-bold rounded-xl hover:brightness-90 transition">Approve</button>
               <button onclick="openReject(${a.id})" class="inline-flex items-center gap-1 px-3 py-1.5 border-2 border-red-400 text-red-600 text-xs font-bold rounded-xl hover:bg-red-50 transition">Reject</button>`:''}
-            ${a.status==='Approved'?`<button onclick="dlPass(${a.id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-xs font-bold rounded-xl hover:brightness-90 transition">PDF</button>`:''}
+            ${a.status==='Approved'?`<button onclick="dlPass(${a.id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-xs font-bold rounded-xl hover:brightness-90 transition">PDF</button><button onclick="previewPass(${a.id})" class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-500 text-white text-xs font-bold rounded-xl hover:brightness-90 transition ml-1">Preview</button>`:''}
           </div>
         </td>
       </tr>`).join('');
@@ -236,7 +236,7 @@
           <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Uploaded Documents</p>
           <div class="flex flex-wrap gap-2">
             ${docs.map(doc => `
-              <a href="/api/admin/document?path=${encodeURIComponent(doc.file_path)}" target="_blank"
+              <a href="#" onclick="openDoc('${doc.file_path}');return false;"
                  class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-sm text-slate-600 hover:bg-slate-50 font-medium transition">
                 <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 ${doc.document_type === 'bonafide' ? 'Bonafide Certificate' : doc.document_type === 'college_id' ? 'College ID Card' : 'Passport Photo'}
@@ -252,7 +252,11 @@
           </button>
           <button onclick="openReject(${a.id});closeModal()" class="flex-1 py-3 border-2 border-red-400 text-red-600 font-bold rounded-xl hover:bg-red-50 transition text-sm">Reject</button>` : ''}
         ${a.status === 'Approved' ? `
-          <button onclick="dlPass(${a.id})" class="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl hover:brightness-90 transition flex items-center justify-center gap-2 text-sm">
+          <button onclick="previewPass(${a.id})" class="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:brightness-90 transition flex items-center justify-center gap-2 text-sm">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              Preview Pass
+            </button>
+            <button onclick="dlPass(${a.id})" class="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl hover:brightness-90 transition flex items-center justify-center gap-2 text-sm">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Download Pass PDF
           </button>` : ''}
@@ -282,6 +286,29 @@
     closeReject(); refresh();
   }
 
+  function openDoc(filePath) {
+    const tok = localStorage.getItem('adminToken');
+    fetch('/api/admin/document?path=' + encodeURIComponent(filePath), { headers: { 'Authorization': 'Bearer ' + tok } })
+      .then(r => r.blob())
+      .then(blob => { const url = URL.createObjectURL(blob); window.open(url, '_blank'); })
+      .catch(() => alert('Could not open document.'));
+  }
+
+  async function previewPass(id) {
+    const modal = document.getElementById('adminPreviewModal');
+    const frame = document.getElementById('adminPreviewFrame');
+    const dlBtn = document.getElementById('adminPreviewDlBtn');
+    frame.src = '';
+    modal.style.display = 'flex';
+    const tok = localStorage.getItem('adminToken');
+    const res = await fetch('/api/admin/preview-pass/' + id, { headers: { 'Authorization': 'Bearer ' + tok } });
+    if (!res.ok) { alert('Pass not available.'); modal.style.display = 'none'; return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    frame.src = url;
+    dlBtn.onclick = () => { const a = document.createElement('a'); a.href = url; a.download = 'concession-pass.pdf'; a.click(); };
+  }
+
   async function dlPass(id) {
     const r = await af(`/api/admin/download-pass/${id}`);
     if (!r.ok) { const d = await r.json(); alert(d.message); return; }
@@ -295,5 +322,19 @@
 
   refresh();
 </script>
+
+<!-- Admin Preview Modal -->
+<div id="adminPreviewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:12px;width:90vw;height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#0f2d5e;">
+      <span style="color:white;font-weight:bold;font-size:16px;">Pass Preview</span>
+      <div style="display:flex;gap:10px;">
+        <button id="adminPreviewDlBtn" style="background:#16a34a;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:bold;">Download</button>
+        <button onclick="document.getElementById('adminPreviewModal').style.display='none';document.getElementById('adminPreviewFrame').src='';" style="background:#ef4444;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:bold;">Close</button>
+      </div>
+    </div>
+    <iframe id="adminPreviewFrame" style="flex:1;border:none;width:100%;"></iframe>
+  </div>
+</div>
 </body>
 </html>

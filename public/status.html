@@ -51,6 +51,9 @@
       <button id="dlBtn" disabled class="w-full py-3 bg-[#1a3a6b] text-white font-bold rounded-xl opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
         📥 Download Pass (Available after approval)
       </button>
+      <button id="previewBtn" disabled class="w-full py-3 bg-slate-400 text-white font-bold rounded-xl opacity-50 cursor-not-allowed flex items-center justify-center gap-2 mt-2">
+        👁 Preview Pass (Available after approval)
+      </button>
     </div>
   </div>
 </div>
@@ -104,7 +107,8 @@
     ].map(([l,v])=>`<div class="bg-slate-50 rounded-xl p-3 border border-slate-100"><p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">${l}</p><p class="text-sm font-semibold">${v}</p></div>`).join('');
     // Download btn
     const btn=document.getElementById('dlBtn');
-    if(s==='Approved'){btn.disabled=false;btn.className='w-full py-3 bg-[#1a3a6b] text-white font-bold rounded-xl hover:brightness-90 transition flex items-center justify-center gap-2';btn.innerHTML='📥 Download Concession Pass (PDF)';btn.onclick=dlPass;}
+    if(s==='Approved'){btn.disabled=false;btn.className='w-full py-3 bg-[#1a3a6b] text-white font-bold rounded-xl hover:brightness-90 transition flex items-center justify-center gap-2';btn.innerHTML='📥 Download Concession Pass (PDF)';btn.onclick=dlPass;
+      const pb=document.getElementById('previewBtn');pb.disabled=false;pb.className='w-full py-3 bg-emerald-600 text-white font-bold rounded-xl hover:brightness-90 transition flex items-center justify-center gap-2 mt-2';pb.innerHTML='👁 Preview Concession Pass';pb.onclick=previewPass;}
   }
 
   async function dlPass(){
@@ -115,7 +119,62 @@
     btn.innerHTML='📥 Download Concession Pass (PDF)';btn.disabled=false;
   }
 
+  async function previewPass(){
+    const modal=document.getElementById('previewModal');
+    const frame=document.getElementById('previewFrame');
+    const dlBtn=document.getElementById('previewDownloadBtn');
+    frame.src='';
+    modal.style.display='flex';
+    const res=await fetch('/api/student/preview-pass/'+sel.id,{headers:{'Authorization':'Bearer '+tok()}});
+    if(!res.ok){alert('Pass not available.');modal.style.display='none';return;}
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    frame.src=url;
+    dlBtn.onclick=()=>{const a=document.createElement('a');a.href=url;a.download='concession-pass.pdf';a.click();};
+  }
+
   load();
+</script>
+
+<!-- Preview Modal -->
+<div id="previewModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:12px;width:90vw;height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#0f2d5e;">
+      <span style="color:white;font-weight:bold;font-size:16px;">Pass Preview</span>
+      <div style="display:flex;gap:10px;">
+        <button id="previewDownloadBtn" style="background:#f97316;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:bold;">Download</button>
+        <button onclick="closePreview()" style="background:#ef4444;color:white;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:bold;">Close</button>
+      </div>
+    </div>
+    <iframe id="previewFrame" style="flex:1;border:none;width:100%;"></iframe>
+  </div>
+</div>
+
+<script>
+function openPreview(appId) {
+  const token = localStorage.getItem('token');
+  const modal = document.getElementById('previewModal');
+  const frame = document.getElementById('previewFrame');
+  const dlBtn = document.getElementById('previewDownloadBtn');
+  frame.src = '';
+  modal.style.display = 'flex';
+  fetch('/api/student/preview-pass/' + appId, { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(r => r.blob())
+    .then(blob => {
+      const url = URL.createObjectURL(blob);
+      frame.src = url;
+      dlBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'concession-pass.pdf';
+        a.click();
+      };
+    });
+}
+function closePreview() {
+  document.getElementById('previewModal').style.display = 'none';
+  document.getElementById('previewFrame').src = '';
+}
 </script>
 </body>
 </html>

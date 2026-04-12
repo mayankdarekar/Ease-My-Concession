@@ -295,22 +295,25 @@ app.get('/api/student/download-pass/:id', auth, async (req, res) => {
     );
     if (!rows.length) return res.status(404).json({ message: 'Approved pass not found.' });
     const a = rows[0];
-    const { generateOverlayPass } = require('./overlay-pass');
-    const pdf = await generateOverlayPass({
-      studentName: a.name, age: a.age||'',
-      dob: a.dob ? new Date(a.dob).toLocaleDateString('en-IN') : '',
-      from: a.source_station, to: a.destination_station,
-      duration: a.duration, classOfTravel: 'II',
-      issueDate: new Date(a.applied_date).toLocaleDateString('en-IN'),
-      expiryDate: new Date(a.expiry_date).toLocaleDateString('en-IN'),
-    });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="pass_${a.pass_id}.pdf"`);
-    res.send(pdf);
+    res.setHeader('Content-Disposition', 'inline');
+    res.sendFile(require('path').join(__dirname, 'public', 'concession-form.pdf'));
+  } catch(e) { res.status(500).json({ message: e.message }); }
+});
+app.get('/api/admin/download-pass/:id', adminAuth, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT a.*,s.name,s.college_id,s.branch,s.year,s.gender,s.age,s.dob FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=? AND a.status='Approved'",
+      [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ message: 'Not found.' });
+    const a = rows[0];
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline');
+    res.sendFile(require('path').join(__dirname, 'public', 'concession-form.pdf'));
   } catch(e) { res.status(500).json({ message: e.message }); }
 });
 
-// ── Admin Routes ──────────────────────────────────────────
 app.get('/api/admin/dashboard', adminAuth, async (req, res) => {
   try {
     const [[{ total }]]              = await db.query('SELECT COUNT(*) AS total FROM applications');
@@ -325,10 +328,10 @@ app.get('/api/admin/dashboard', adminAuth, async (req, res) => {
 app.get('/api/admin/applications', adminAuth, async (req, res) => {
   try {
     const { status } = req.query;
-    let q = 'SELECT a.*,s.name AS student_name,s.email,s.college_id,s.branch,s.year FROM applications a JOIN students s ON s.id=a.student_id';
+    let q = 'SELECT a.*,s.name AS student_name,s.email,s.college_id,s.branch,s.year,s.gender,s.age,s.address FROM applications a JOIN students s ON s.id=a.student_id';
     const params = [];
     if (status) { q += ' WHERE a.status=?'; params.push(status); }
-    q += ' ORDER BY a.applied_date DESC';
+    q += ' ORDER BY a.created_at DESC';
     const [rows] = await db.query(q, params);
     res.json({ applications: rows });
   } catch(e) { res.status(500).json({ message: e.message }); }
@@ -336,31 +339,31 @@ app.get('/api/admin/applications', adminAuth, async (req, res) => {
 
 app.get('/api/admin/application/:id', adminAuth, async (req, res) => {
   try {
-    const [apps] = await db.query(
-      'SELECT a.*,s.name AS student_name,s.email,s.college_id,s.branch,s.year FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=?',
-      [req.params.id]
-    );
+    const [apps] = await db.query('SELECT a.*,s.name AS student_name,s.email,s.college_id,s.branch,s.year,s.gender,s.age,s.address,s.phone FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=?', [req.params.id]);
     if (!apps.length) return res.status(404).json({ message: 'Not found.' });
-    const [docs] = await db.query('SELECT id,document_type,file_path FROM documents WHERE application_id=?', [req.params.id]);
+    const [docs] = await db.query('SELECT document_type,file_path FROM documents WHERE application_id=?', [req.params.id]);
     res.json({ application: apps[0], documents: docs });
   } catch(e) { res.status(500).json({ message: e.message }); }
 });
 
 app.post('/api/admin/approve/:id', adminAuth, async (req, res) => {
   try {
-    const [apps] = await db.query("SELECT * FROM applications WHERE id=? AND status!='Approved'", [req.params.id]);
-    if (!apps.length) return res.status(404).json({ message: 'Not found or already approved.' });
-    const pid = makePassId();
-    const exp = computeExpiry(apps[0].duration);
-    await db.query("UPDATE applications SET status='Approved',pass_id=?,expiry_date=? WHERE id=?", [pid, exp, req.params.id]);
-    res.json({ message: 'Approved!', passId: pid, expiryDate: exp });
+    const [rows] = await db.query('SELECT * FROM applications WHERE id=?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ message: 'Not found.' });
+    const duration = rows[0].duration;
+    const months = duration === 'Monthly' ? 1 : 3;
+    const expiry = new Date();
+    expiry.setMonth(expiry.getMonth() + months);
+    const passId = 'RCP-' + Math.random().toString(36).slice(2,10).toUpperCase() + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
+    await db.query("UPDATE applications SET status='Approved', expiry_date=?, pass_id=? WHERE id=?", [expiry, passId, req.params.id]);
+    res.json({ message: 'Approved!', passId, expiryDate: expiry });
   } catch(e) { res.status(500).json({ message: e.message }); }
 });
 
 app.post('/api/admin/reject/:id', adminAuth, async (req, res) => {
   try {
-    await db.query("UPDATE applications SET status='Rejected',rejection_reason=? WHERE id=?",
-      [req.body.reason || 'Documents not valid.', req.params.id]);
+    const { reason } = req.body;
+    await db.query("UPDATE applications SET status='Rejected', rejection_reason=? WHERE id=?", [reason||'', req.params.id]);
     res.json({ message: 'Rejected.' });
   } catch(e) { res.status(500).json({ message: e.message }); }
 });
@@ -372,26 +375,13 @@ app.post('/api/admin/set-verification/:id', adminAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ message: e.message }); }
 });
 
-app.get('/api/admin/download-pass/:id', adminAuth, async (req, res) => {
+app.get('/api/admin/preview-pass/:id', adminAuth, async (req, res) => {
   try {
-    const [rows] = await db.query(
-      "SELECT a.*,s.name,s.college_id,s.branch,s.year,s.gender,s.age,s.dob FROM applications a JOIN students s ON s.id=a.student_id WHERE a.id=? AND a.status='Approved'",
-      [req.params.id]
-    );
+    const [rows] = await db.query("SELECT * FROM applications WHERE id=? AND status='Approved'", [req.params.id]);
     if (!rows.length) return res.status(404).json({ message: 'Not found.' });
-    const a = rows[0];
-    const { generateOverlayPass } = require('./overlay-pass');
-    const pdf = await generateOverlayPass({
-      studentName: a.name, age: a.age||'',
-      dob: a.dob ? new Date(a.dob).toLocaleDateString('en-IN') : '',
-      from: a.source_station, to: a.destination_station,
-      duration: a.duration, classOfTravel: 'II',
-      issueDate: new Date(a.applied_date).toLocaleDateString('en-IN'),
-      expiryDate: new Date(a.expiry_date).toLocaleDateString('en-IN'),
-    });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="pass_${a.pass_id}.pdf"`);
-    res.send(pdf);
+    res.setHeader('Content-Disposition', 'inline');
+    res.sendFile(require('path').join(__dirname, 'public', 'concession-form.pdf'));
   } catch(e) { res.status(500).json({ message: e.message }); }
 });
 
